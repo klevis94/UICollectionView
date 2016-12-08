@@ -12,31 +12,33 @@ class ViewController: UIViewController,UICollectionViewDelegate,UICollectionView
     
     @IBOutlet weak var collectionView: UICollectionView!
     let screenSize: CGRect = UIScreen.main.bounds
-    var foodArray : [UIImage] = [UIImage(),UIImage(),UIImage(),UIImage(),UIImage(),UIImage(),UIImage(),UIImage(),UIImage(),UIImage(),UIImage(),UIImage(),UIImage(),UIImage(),UIImage(),UIImage(),UIImage(),UIImage(),UIImage(),UIImage(),UIImage(),UIImage(),UIImage(),UIImage(),UIImage(),UIImage(),UIImage(),UIImage(),UIImage(),UIImage()]
+   
+    var foodArray = [UIImage](repeating: UIImage(), count: 30)
     
-    let url : String = "https://s-media-cache-ak0.pinimg.com/736x/19/d0/35/19d0354e13202322f8c84e4d459667d5.jpg"
+    let url = URL(string: "https://s-media-cache-ak0.pinimg.com/736x/19/d0/35/19d0354e13202322f8c84e4d459667d5.jpg")
     
     override func viewDidLoad() {
-        
+       
         super.viewDidLoad()
-       // print(urlArray.count)
         
         collectionView.dataSource = self
         collectionView.delegate = self
         collectionView.prefetchDataSource = self
-      
-            
-            getDataFromUrl(url: URL(string: url)!) { (data, response, error)  in
-                guard let data = data, error == nil else {
-                    return
-                }
-                 for index in 0...4{
-                self.foodArray[index]  =  UIImage(data: data)!
-                }
-                DispatchQueue.main.async() { () -> Void in
-                    self.collectionView.reloadData()
-                }
+        
+
+        let task = URLSession.shared.dataTask(with: url!) { data, response, error in
+            guard let data = data, error == nil else { return }
+            for index in 0...4{
+            DispatchQueue.main.async() {
+                self.foodArray[index] = UIImage(data: data)!
+                self.collectionView.reloadData()
             }
+            }
+        }
+        
+        task.resume()
+        
+    
         
     }
     
@@ -60,14 +62,18 @@ class ViewController: UIViewController,UICollectionViewDelegate,UICollectionView
 
     func collectionView(_ collectionView: UICollectionView, prefetchItemsAt indexPaths: [IndexPath]) {
         for indexPath in indexPaths{
-            getDataFromUrl(url: URL(string: url)!) { (data, response, error)  in
-                guard let data = data, error == nil else {
-                    return
-                }
-                //DispatchQueue.main.async() { () -> Void in
-                self.foodArray[indexPath.row]  =  UIImage(data: data)!
-                //}
+
+            
+            let task = URLSession.shared.dataTask(with: url!) { data, response, error in
+                guard let data = data, error == nil else { return }
+                
+                    self.foodArray[indexPath.row] = UIImage(data: data)!
+                
             }
+            
+            task.resume()
+        
+        
         }
     }
     
@@ -82,15 +88,5 @@ class ViewController: UIViewController,UICollectionViewDelegate,UICollectionView
                                  sizeForItemAtIndexPath indexPath: NSIndexPath) -> CGSize{
         return CGSize(width:screenSize.width ,height: screenSize.height * 0.3)
     }
-    
-    
-    
-    func getDataFromUrl(url: URL, completion: @escaping (_ data: Data?, _  response: URLResponse?, _ error: Error?) -> Void) {
-        URLSession.shared.dataTask(with: url) {
-            (data, response, error) in
-            completion(data, response, error)
-            }.resume()
-    }
-    
 }
 
